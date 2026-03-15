@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Calculadora DIGI</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#003DA5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DIGI Calc">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #002880 0%, #003DA5 60%, #0055CC 100%);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 24px 12px 40px;
+            font-family: 'Nunito', 'Segoe UI', sans-serif;
+        }
+
+        .wrapper { width: 100%; max-width: 420px; }
+
+        .top-header { text-align: center; margin-bottom: 20px; }
+
+        .logo-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(8px);
+            border-radius: 50px;
+            padding: 8px 22px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+
+        .logo-text { color: #fff; font-weight: 900; font-size: 22px; letter-spacing: -0.5px; }
+        .logo-text span { color: #00C8E6; }
+        .subtitle { color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+
+        .card { background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+
+        .banner {
+            background: linear-gradient(135deg, #003DA5 0%, #00C8E6 100%);
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .banner-label { color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .banner-amount { color: #fff; font-size: 30px; font-weight: 900; margin-top: 2px; }
+
+        .banner-badge {
+            background: rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 10px 16px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .banner-badge small { color: rgba(255,255,255,0.8); font-size: 11px; font-weight: 700; display: block; }
+
+        .body { padding: 20px 20px 24px; }
+
+        .minimo-box {
+            background: #E8F0FF;
+            border-radius: 14px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            border: 1.5px solid #003DA5;
+            transition: border-color 0.3s;
+        }
+
+        .minimo-box.off { border-color: #DDE4F0; }
+        .minimo-title { font-weight: 800; font-size: 14px; color: #1A1A2E; }
+        .minimo-sub { font-size: 12px; color: #667; margin-top: 2px; }
+
+        .toggle-track {
+            width: 52px; height: 28px;
+            border-radius: 14px;
+            cursor: pointer;
+            background: #003DA5;
+            position: relative;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .toggle-track.off { background: #C5CDE0; }
+
+        .toggle-thumb {
+            position: absolute;
+            top: 3px; left: 27px;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: #fff;
+            transition: left 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-thumb.off { left: 3px; }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+
+        .input-group { margin-bottom: 10px; }
+
+        .input-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #003DA5;
+            margin-bottom: 6px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #E8F0FF;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1A1A2E;
+            background: #fff;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus { border-color: #00C8E6; }
+
+        .btn-calc {
+            width: 100%;
+            padding: 16px;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #003DA5 0%, #00C8E6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,61,165,0.35);
+            font-family: inherit;
+            transition: transform 0.15s;
+        }
+
+        .btn-calc:active { transform: scale(0.97); }
+
+        .resultados {
+            margin-top: 20px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid #E8F0FF;
+            display: none;
+            animation: slideUp 0.4s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .res-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 11px 16px;
+            font-size: 14px;
+            color: #1A1A2E;
+            border-bottom: 1px solid #E8F0FF;
+        }
+
+        .res-row:nth-child(odd)  { background: #F4F6FB; }
+        .res-row:nth-child(even) { background: #fff; }
+        .res-row.bold { font-weight: 800; color: #003DA5; }
+        .res-row span:last-child { font-weight: 800; }
+
+        .neto-box {
+            background: linear-gradient(135deg, #003DA5 0%, #00C8E6 100%);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .neto-label { color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .neto-amount { color: #fff; font-size: 34px; font-weight: 900; margin-top: 4px; }
+        .neto-nota { color: rgba(255,255,255,0.65); font-size: 11px; margin-top: 4px; }
+
+        .footer-text { text-align: center; margin-top: 14px; color: rgba(255,255,255,0.35); font-size: 11px; }
+
+        /* Banner instalar */
+        #installBanner {
+            display: none;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        #installBanner p { color: #fff; font-size: 13px; font-weight: 700; }
+        #installBanner p small { display: block; color: rgba(255,255,255,0.7); font-weight: 400; font-size: 11px; }
+
+        #btnInstall {
+            background: #00C8E6;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        #btnCerrar {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+
+        <!-- Banner instalar PWA -->
+        <div id="installBanner">
+            <p>📲 Instalar como app<small>Úsala sin navegador</small></p>
+            <button id="btnInstall">Instalar</button>
+            <button id="btnCerrar">✕</button>
+        </div>
+
+        <!-- Header -->
+        <div class="top-header">
+            <div class="logo-pill">
+                <span style="font-size:22px">📡</span>
+                <span class="logo-text">digi<span>mobil</span></span>
+            </div>
+            <div class="subtitle">Calculadora Promotor D2D</div>
+        </div>
+
+        <!-- Card -->
+        <div class="card">
+
+            <div class="banner">
+                <div>
+                    <div class="banner-label">Sueldo Fijo Bruto</div>
+                    <div class="banner-amount">1.625,00 €</div>
+                </div>
+                <div class="banner-badge">
+                    <small>MENSUAL</small>
+                    <span style="font-size:24px">💼</span>
+                </div>
+            </div>
+
+            <div class="body">
+
+                <div class="minimo-box" id="minimoBox">
+                    <div>
+                        <div class="minimo-title">🛡️ Mínimo Garantizado</div>
+                        <div class="minimo-sub">250€ primeros 3 meses</div>
+                    </div>
+                    <div class="toggle-track" id="toggleTrack" onclick="toggleMinimo()">
+                        <div class="toggle-thumb" id="toggleThumb"></div>
+                    </div>
+                </div>
+
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>📶 FIBRA</label>
+                        <input type="number" id="fibras" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>📱 MÓVIL</label>
+                        <input type="number" id="moviles" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>☎️ FIJO</label>
+                        <input type="number" id="fijos" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>⚡ FIBRA PRO</label>
+                        <input type="number" id="fibraPro" value="0" min="0">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>📺 TV</label>
+                    <input type="number" id="tv" value="0" min="0">
+                </div>
+
+                <button class="btn-calc" onclick="calcular()">CALCULAR MI NÓMINA →</button>
+
+                <div class="resultados" id="resultados">
+                    <div class="res-row"><span>💰 Comisiones brutas</span><span id="resComis">0,00 €</span></div>
+                    <div class="res-row"><span>📊 Mínimo aplicado</span><span id="resMinimo">No</span></div>
+                    <div class="res-row bold"><span>💶 Total Bruto</span><span id="resBruto">0,00 €</span></div>
+                    <div class="neto-box">
+                        <div class="neto-label">💵 Neto Estimado</div>
+                        <div class="neto-amount" id="resNeto">0,00 €</div>
+                        <div class="neto-nota">*Guipúzcoa · 2 hijos · SS 6.4% + IRPF 9%</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer-text">digimobil.es · Uso interno promotores</div>
+    </div>
+
+    <script>
+        // ── Registro Service Worker ──
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        // ── Banner de instalación PWA ──
+        let deferredPrompt;
+        const banner   = document.getElementById('installBanner');
+        const btnInst  = document.getElementById('btnInstall');
+        const btnClose = document.getElementById('btnCerrar');
+
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredPrompt = e;
+            banner.style.display = 'flex';
+        });
+
+        btnInst.addEventListener('click', async () => {
+            banner.style.display = 'none';
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+        });
+
+        btnClose.addEventListener('click', () => {
+            banner.style.display = 'none';
+        });
+
+        // ── Lógica calculadora ──
+        let minimoActivo = true;
+
+        function toggleMinimo() {
+            minimoActivo = !minimoActivo;
+            document.getElementById('toggleTrack').classList.toggle('off', !minimoActivo);
+            document.getElementById('toggleThumb').classList.toggle('off', !minimoActivo);
+            document.getElementById('minimoBox').classList.toggle('off', !minimoActivo);
+        }
+
+        function calcularComisionFibra(num) {
+            if (num <= 10) return num * 6;
+            if (num <= 15) return num * 8;
+            if (num <= 21) return num * 10;
+            if (num <= 29) return num * 15;
+            if (num <= 40) return num * 17.5;
+            return num * 20;
+        }
+
+        function fmt(n) {
+            return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+        }
+
+        function calcular() {
+            const fibras   = parseInt(document.getElementById('fibras').value)   || 0;
+            const moviles  = parseInt(document.getElementById('moviles').value)  || 0;
+            const fijos    = parseInt(document.getElementById('fijos').value)    || 0;
+            const fibraPro = parseInt(document.getElementById('fibraPro').value) || 0;
+            const tv       = parseInt(document.getElementById('tv').value)       || 0;
+
+            const comisionFibra    = calcularComisionFibra(fibras);
+            const comisionMovil    = moviles  * 5;
+            const comisionFijo     = fijos    * 2;
+            const comisionFibraPro = fibraPro * 20;
+            const comisionTV       = tv > 7 ? tv * 7 : tv * 3;
+
+            const comisionesReales = comisionFibra + comisionMovil + comisionFijo + comisionFibraPro + comisionTV;
+
+            let comisionesFinales = comisionesReales;
+            let textoMinimo = 'No';
+
+            if (minimoActivo && comisionesReales < 250) {
+                comisionesFinales = 250;
+                textoMinimo = 'Sí (mínimo 250€)';
+            } else if (minimoActivo && comisionesReales >= 250) {
+                textoMinimo = 'No necesario';
+            }
+
+            const totalBruto = 1625 + comisionesFinales;
+            const neto = totalBruto * (1 - 0.064 - 0.09);
+
+            const area = document.getElementById('resultados');
+            area.style.display = 'none';
+            area.style.animation = 'none';
+            void area.offsetWidth;
+            area.style.animation = '';
+            area.style.display = 'block';
+
+            document.getElementById('resComis').textContent  = fmt(comisionesReales);
+            document.getElementById('resMinimo').textContent = textoMinimo;
+            document.getElementById('resBruto').textContent  = fmt(totalBruto);
+            document.getElementById('resNeto').textContent   = fmt(neto);
+        }
+
+        window.onload = calcular;
+    </script>
+</body>
+</html>
