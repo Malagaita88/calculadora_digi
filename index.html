@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Calculadora DIGI</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#003DA5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DIGI Calc">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --blue: #003DA5; --blue-dark: #002880; --blue-light: #E8F0FF;
+            --cyan: #00C8E6; --green: #00C48C; --red: #FF4757;
+            --text: #1A1A2E; --gray: #F4F6FB; --border: #DDE4F0;
+        }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue) 60%, #0055CC 100%);
+            font-family: 'Nunito', 'Segoe UI', sans-serif;
+            padding-bottom: 80px;
+        }
+
+        /* NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; display: flex;
+            border-top: 1px solid var(--border); z-index: 100;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        }
+        .nav-btn {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 10px 4px 8px; border: none; background: none;
+            cursor: pointer; font-family: inherit; color: #999;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+            transition: color 0.2s; gap: 3px;
+        }
+        .nav-btn .ni { font-size: 20px; }
+        .nav-btn.active { color: var(--blue); }
+
+        /* PAGES */
+        .page { display: none; padding: 20px 14px 10px; }
+        .page.active { display: block; }
+
+        /* HEADER */
+        .page-header { text-align: center; padding: 20px 0 16px; }
+        .logo-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.15); border-radius: 50px;
+            padding: 7px 18px; margin-bottom: 6px;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        .logo-text { color: #fff; font-weight: 900; font-size: 20px; letter-spacing: -0.5px; }
+        .logo-text span { color: var(--cyan); }
+        .page-subtitle { color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+
+        /* CARD */
+        .card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.2); margin-bottom: 14px; }
+        .card-header {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%);
+            padding: 13px 18px; display: flex; align-items: center; gap: 10px;
+        }
+        .card-header h2 { color: white; font-size: 15px; font-weight: 800; }
+        .card-body { padding: 16px 16px 18px; }
+
+        /* FIELDS */
+        .field { margin-bottom: 12px; }
+        .field label {
+            display: block; font-size: 12px; font-weight: 800;
+            color: var(--blue); margin-bottom: 5px;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        .field input, .field select {
+            width: 100%; padding: 11px 14px;
+            border: 2px solid var(--blue-light); border-radius: 11px;
+            font-size: 16px; font-weight: 700; color: var(--text);
+            background: white; outline: none; font-family: inherit;
+            transition: border-color 0.2s; -webkit-appearance: none; appearance: none;
+        }
+        .field input:focus, .field select:focus { border-color: var(--cyan); }
+        .field-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* TOGGLE */
+        .toggle-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid var(--blue-light); margin-bottom: 10px;
+        }
+        .toggle-label { font-size: 14px; font-weight: 800; color: var(--text); }
+        .toggle-sub   { font-size: 11px; color: #888; margin-top: 1px; }
+        .toggle-track {
+            width: 48px; height: 26px; border-radius: 13px; cursor: pointer;
+            background: var(--blue); position: relative; transition: background 0.3s; flex-shrink: 0;
+        }
+        .toggle-track.off { background: #C5CDE0; }
+        .toggle-thumb {
+            position: absolute; top: 3px; left: 25px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: white; transition: left 0.3s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-thumb.off { left: 3px; }
+
+        /* BUTTONS */
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 50px;
+            font-size: 15px; font-weight: 900; cursor: pointer; font-family: inherit;
+            transition: transform 0.15s; letter-spacing: 0.3px;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%); color: white; box-shadow: 0 6px 18px rgba(0,61,165,0.3); }
+        .btn-success { background: linear-gradient(135deg, #00A878 0%, var(--green) 100%); color: white; box-shadow: 0 6px 18px rgba(0,196,140,0.3); }
+
+        /* VENTAS */
+        .venta-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px; border-radius: 12px; margin-bottom: 8px;
+            border: 1.5px solid var(--blue-light); background: var(--gray);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+        .venta-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .venta-name { font-weight: 800; font-size: 14px; color: var(--text); }
+        .venta-fecha { font-size: 11px; color: #888; margin-top: 1px; }
+        .venta-comision { font-weight: 900; font-size: 15px; color: var(--blue); }
+        .btn-del { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; }
+        .btn-del:active { color: var(--red); }
+        .empty-state { text-align: center; padding: 28px 20px; color: #bbb; }
+        .empty-state .ei { font-size: 38px; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; font-weight: 600; }
+
+        /* MES */
+        .mes-selector {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.12); border-radius: 12px;
+            padding: 8px 14px; margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .mes-selector span { color: white; font-weight: 800; font-size: 15px; }
+        .mes-btn {
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            width: 32px; height: 32px; border-radius: 8px; font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit;
+        }
+        .badge-count {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: var(--cyan); color: white; font-size: 11px; font-weight: 900;
+            min-width: 20px; height: 20px; border-radius: 10px; padding: 0 5px; margin-left: 6px;
+        }
+
+        /* PROMOTOR BANNER */
+        .promotor-banner {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 14px; padding: 10px 16px; margin-bottom: 14px;
+            display: none; align-items: center; gap: 10px;
+        }
+        .promotor-avatar {
+            width: 40px; height: 40px; background: var(--cyan); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 900; color: white; flex-shrink: 0;
+        }
+        .promotor-name { color: white; font-weight: 800; font-size: 15px; }
+        .promotor-sub  { color: rgba(255,255,255,0.65); font-size: 11px; }
+
+        /* RESULTADOS */
+        .res-section-title {
+            font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.85);
+            letter-spacing: 1px; text-transform: uppercase; margin: 14px 0 8px; padding-left: 2px;
+        }
+        .res-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px; font-size: 14px; color: var(--text);
+            border-bottom: 1px solid var(--blue-light);
+        }
+        .res-row:last-child { border-bottom: none; }
+        .res-row:nth-child(odd)  { background: var(--gray); }
+        .res-row:nth-child(even) { background: white; }
+        .res-row.bold { font-weight: 800; color: var(--blue); }
+        .res-row span:last-child { font-weight: 800; }
+        .tag {
+            font-size: 10px; background: var(--blue-light); color: var(--blue);
+            padding: 2px 7px; border-radius: 20px; font-weight: 800; margin-left: 6px;
+        }
+
+        /* TRAMOS */
+        .tramos-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .tramos-table th { background: var(--blue); color: white; padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
+        .tramos-table th:last-child { text-align: right; }
+        .tramos-table td { padding: 8px 10px; border-bottom: 1px solid var(--blue-light); color: var(--text); font-weight: 600; }
+        .tramos-table td:last-child { text-align: right; font-weight: 800; }
+        .tramos-table tr:nth-child(even) td { background: var(--gray); }
+        .tramos-table tr.activo td { background: #E8FFF7; color: #00875A; font-weight: 800; }
+        .tramos-table tr.activo td:first-child::before { content: "▶ "; }
+        .tramos-table tr.futuro td { color: #aaa; }
+
+        /* NETO */
+        .neto-box { background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%); padding: 18px; text-align: center; }
+        .neto-label  { color: rgba(255,255,255,0.8); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .neto-amount { color: white; font-size: 36px; font-weight: 900; margin-top: 4px; }
+        .neto-nota   { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 4px; }
+
+        .save-ok {
+            display: none; background: #E8FFF7; color: #00875A;
+            border-radius: 10px; padding: 10px 14px; font-size: 13px;
+            font-weight: 700; text-align: center; margin-top: 10px;
+        }
+
+        @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        .slide-up { animation: slideUp 0.35s ease forwards; }
+    </style>
+</head>
+<body>
+
+<!-- ══ CONFIGURACIÓN ══ -->
+<div class="page active" id="page-config">
+    <div class="page-header">
+        <div class="logo-pill"><span style="font-size:20px">📡</span><span class="logo-text">digi<span>mobil</span></span></div>
+        <div class="page-subtitle">Mi Configuración</div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><span style="font-size:20px">👤</span><h2>Datos del Promotor</h2></div>
+        <div class="card-body">
+            <div class="field"><label>Nombre</label><input type="text" id="cfg-nombre" placeholder="Tu nombre completo"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><span style="font-size:20px">💼</span><h2>Contrato</h2></div>
+        <div class="card-body">
+            <div class="field"><label>Sueldo Fijo Bruto (€/mes)</label><input type="number" id="cfg-fijo" value="1625" min="0"></div>
+            <div class="field-row">
+                <div class="field"><label>% Seg. Social</label><input type="number" id="cfg-ss" value="6.4" min="0" max="100" step="0.1"></div>
+                <div class="field"><label>% IRPF</label><input type="number" id="cfg-irpf" value="9" min="0" max="50" step="0.1"></div>
+            </div>
+            <div class="field"><label>Nota fiscal (opcional)</label><input type="text" id="cfg-nota" placeholder="Ej: Guipúzcoa · 2 hijos"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><span style="font-size:20px">🛡️</span><h2>Mínimo Garantizado</h2></div>
+        <div class="card-body">
+            <div class="toggle-row">
+                <div><div class="toggle-label">Activar mínimo garantizado</div><div class="toggle-sub">Comisión mínima mensual</div></div>
+                <div class="toggle-track" id="tog-minimo" onclick="toggleCfg()">
+                    <div class="toggle-thumb" id="tog-minimo-thumb"></div>
+                </div>
+            </div>
+            <div class="field-row" id="minimo-fields">
+                <div class="field"><label>Importe (€)</label><input type="number" id="cfg-minimo-importe" value="250" min="0"></div>
+                <div class="field"><label>Nº meses</label><input type="number" id="cfg-minimo-meses" value="3" min="1"></div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="guardarConfig()">GUARDAR CONFIGURACIÓN ✓</button>
+    <div class="save-ok" id="save-ok">✅ Configuración guardada correctamente</div>
+</div>
+
+<!-- ══ CONTRATOS ══ -->
+<div class="page" id="page-ventas">
+    <div class="page-header">
+        <div class="logo-pill"><span style="font-size:20px">📡</span><span class="logo-text">digi<span>mobil</span></span></div>
+        <div class="page-subtitle">Mis Contratos</div>
+    </div>
+
+    <div class="promotor-banner" id="banner-v">
+        <div class="promotor-avatar" id="av-v">?</div>
+        <div><div class="promotor-name" id="nm-v">Promotor</div><div class="promotor-sub">Registro de contratos</div></div>
+    </div>
+
+    <div class="mes-selector">
+        <button class="mes-btn" onclick="cambiarMes(-1)">‹</button>
+        <span id="mes-label">—</span>
+        <button class="mes-btn" onclick="cambiarMes(1)">›</button>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><span style="font-size:20px">➕</span><h2>Añadir Contrato</h2></div>
+        <div class="card-body">
+            <div class="field-row">
+                <div class="field">
+                    <label>Tipo</label>
+                    <select id="v-tipo">
+                        <option value="fibra">📶 Fibra</option>
+                        <option value="movil">📱 Móvil</option>
+                        <option value="fijo">☎️ Fijo</option>
+                        <option value="fibraPro">⚡ Fibra PRO</option>
+                        <option value="tv">📺 TV</option>
+                    </select>
+                </div>
+                <div class="field"><label>Fecha</label><input type="date" id="v-fecha"></div>
+            </div>
+            <div class="field"><label>Cliente (opcional)</label><input type="text" id="v-cliente" placeholder="Nombre o referencia"></div>
+            <button class="btn btn-success" onclick="agregarVenta()">+ AÑADIR CONTRATO</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span style="font-size:20px">📋</span>
+            <h2>Contratos del mes <span class="badge-count" id="badge-count">0</span></h2>
+        </div>
+        <div class="card-body" style="padding:10px 10px 14px">
+            <div id="lista-ventas"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ NÓMINA ══ -->
+<div class="page" id="page-nomina">
+    <div class="page-header">
+        <div class="logo-pill"><span style="font-size:20px">📡</span><span class="logo-text">digi<span>mobil</span></span></div>
+        <div class="page-subtitle">Mi Nómina</div>
+    </div>
+
+    <div class="promotor-banner" id="banner-n">
+        <div class="promotor-avatar" id="av-n">?</div>
+        <div><div class="promotor-name" id="nm-n">Promotor</div><div class="promotor-sub" id="mes-n">—</div></div>
+    </div>
+
+    <button class="btn btn-primary" style="margin-bottom:14px" onclick="calcularNomina()">CALCULAR NÓMINA →</button>
+    <div id="resultado-nomina"></div>
+</div>
+
+<!-- ══ NAV ══ -->
+<nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-config" onclick="irA('config')"><span class="ni">⚙️</span>Config</button>
+    <button class="nav-btn" id="nav-ventas" onclick="irA('ventas')"><span class="ni">📋</span>Contratos</button>
+    <button class="nav-btn" id="nav-nomina" onclick="irA('nomina')"><span class="ni">💶</span>Nómina</button>
+</nav>
+
+<script>
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const TIPOS = {
+    fibra:    { label:'Fibra',     icon:'📶', color:'#E8F0FF' },
+    movil:    { label:'Móvil',     icon:'📱', color:'#FFF3E8' },
+    fijo:     { label:'Fijo',      icon:'☎️', color:'#F0E8FF' },
+    fibraPro: { label:'Fibra PRO', icon:'⚡', color:'#FFFDE8' },
+    tv:       { label:'TV',        icon:'📺', color:'#E8FFF5' },
+};
+const TRAMOS = [
+    { rango:'1–10',  rate:6,    min:1,  max:10  },
+    { rango:'11–15', rate:8,    min:11, max:15  },
+    { rango:'16–21', rate:10,   min:16, max:21  },
+    { rango:'22–29', rate:15,   min:22, max:29  },
+    { rango:'30–40', rate:17.5, min:30, max:40  },
+    { rango:'41+',   rate:20,   min:41, max:9999},
+];
+
+let state = {
+    config: { nombre:'', fijo:1625, ss:6.4, irpf:9, nota:'', minimoActivo:true, minimoImporte:250, minimoMeses:3 },
+    ventas: {},
+    mes: { y: new Date().getFullYear(), m: new Date().getMonth() }
+};
+let minimoOn = true;
+
+function guardar() { localStorage.setItem('digi_v2', JSON.stringify(state)); }
+function cargar() {
+    try { const r = localStorage.getItem('digi_v2'); if (r) state = JSON.parse(r); } catch(e) {}
+    if (!state.mes) state.mes = { y: new Date().getFullYear(), m: new Date().getMonth() };
+}
+
+function irA(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+    if (page === 'config') cargarFormConfig();
+    if (page === 'ventas') renderVentas();
+    if (page === 'nomina') { renderBanner('n'); document.getElementById('mes-n').textContent = mesLabel(); }
+}
+
+// CONFIG
+function toggleCfg() {
+    minimoOn = !minimoOn;
+    document.getElementById('tog-minimo').classList.toggle('off', !minimoOn);
+    document.getElementById('tog-minimo-thumb').classList.toggle('off', !minimoOn);
+    document.getElementById('minimo-fields').style.opacity = minimoOn ? '1' : '0.4';
+}
+
+function cargarFormConfig() {
+    const c = state.config;
+    document.getElementById('cfg-nombre').value = c.nombre || '';
+    document.getElementById('cfg-fijo').value   = c.fijo   || 1625;
+    document.getElementById('cfg-ss').value     = c.ss     || 6.4;
+    document.getElementById('cfg-irpf').value   = c.irpf   || 9;
+    document.getElementById('cfg-nota').value   = c.nota   || '';
+    document.getElementById('cfg-minimo-importe').value = c.minimoImporte || 250;
+    document.getElementById('cfg-minimo-meses').value   = c.minimoMeses   || 3;
+    minimoOn = c.minimoActivo !== false;
+    document.getElementById('tog-minimo').classList.toggle('off', !minimoOn);
+    document.getElementById('tog-minimo-thumb').classList.toggle('off', !minimoOn);
+    document.getElementById('minimo-fields').style.opacity = minimoOn ? '1' : '0.4';
+}
+
+function guardarConfig() {
+    state.config = {
+        nombre:        document.getElementById('cfg-nombre').value.trim(),
+        fijo:          parseFloat(document.getElementById('cfg-fijo').value)           || 1625,
+        ss:            parseFloat(document.getElementById('cfg-ss').value)             || 6.4,
+        irpf:          parseFloat(document.getElementById('cfg-irpf').value)           || 9,
+        nota:          document.getElementById('cfg-nota').value.trim(),
+        minimoActivo:  minimoOn,
+        minimoImporte: parseFloat(document.getElementById('cfg-minimo-importe').value) || 250,
+        minimoMeses:   parseInt(document.getElementById('cfg-minimo-meses').value)     || 3,
+    };
+    guardar();
+    const ok = document.getElementById('save-ok');
+    ok.style.display = 'block';
+    setTimeout(() => ok.style.display = 'none', 2500);
+}
+
+// MES
+function mesKey() { return state.mes.y + '-' + String(state.mes.m + 1).padStart(2,'0'); }
+function mesLabel() { return MESES[state.mes.m] + ' ' + state.mes.y; }
+function cambiarMes(d) {
+    let { y, m } = state.mes;
+    m += d;
+    if (m < 0)  { m = 11; y--; }
+    if (m > 11) { m = 0;  y++; }
+    state.mes = { y, m };
+    guardar();
+    renderVentas();
+}
+function ventasMes() { return state.ventas[mesKey()] || []; }
+
+// BANNER
+function renderBanner(id) {
+    const nombre = state.config.nombre;
+    const b = document.getElementById('banner-' + id);
+    if (nombre) {
+        b.style.display = 'flex';
+        document.getElementById('av-' + id).textContent = nombre.charAt(0).toUpperCase();
+        document.getElementById('nm-' + id).textContent = nombre;
+    } else { b.style.display = 'none'; }
+}
+
+// VENTAS
+function agregarVenta() {
+    const tipo   = document.getElementById('v-tipo').value;
+    const fecha  = document.getElementById('v-fecha').value;
+    const cliente = document.getElementById('v-cliente').value.trim();
+    if (!fecha) { alert('Selecciona una fecha'); return; }
+    const key = mesKey();
+    if (!state.ventas[key]) state.ventas[key] = [];
+    state.ventas[key].push({ id: Date.now(), tipo, fecha, cliente });
+    guardar();
+    document.getElementById('v-cliente').value = '';
+    renderVentas();
+}
+
+function borrarVenta(id) {
+    const key = mesKey();
+    state.ventas[key] = (state.ventas[key] || []).filter(v => v.id !== id);
+    guardar();
+    renderVentas();
+}
+
+function comUnitaria(tipo, total) {
+    if (tipo === 'fibra')    return total ? calcFibra(total) / total : 0;
+    if (tipo === 'movil')    return 5;
+    if (tipo === 'fijo')     return 2;
+    if (tipo === 'fibraPro') return 20;
+    if (tipo === 'tv')       return total > 7 ? 7 : 3;
+    return 0;
+}
+
+function renderVentas() {
+    document.getElementById('mes-label').textContent = mesLabel();
+    renderBanner('v');
+    const ventas = ventasMes();
+    document.getElementById('badge-count').textContent = ventas.length;
+    const conteo = {};
+    ventas.forEach(v => { conteo[v.tipo] = (conteo[v.tipo] || 0) + 1; });
+    const lista = document.getElementById('lista-ventas');
+    if (!ventas.length) {
+        lista.innerHTML = `<div class="empty-state"><div class="ei">📭</div><p>Sin contratos este mes</p></div>`;
+        return;
+    }
+    lista.innerHTML = ventas.map(v => {
+        const t = TIPOS[v.tipo];
+        const fechaStr = v.fecha ? new Date(v.fecha + 'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'short'}) : '';
+        const cu = comUnitaria(v.tipo, conteo[v.tipo]);
+        return `<div class="venta-item">
+            <div style="display:flex;align-items:center;gap:8px">
+                <div class="venta-icon" style="background:${t.color}">${t.icon}</div>
+                <div>
+                    <div class="venta-name">${t.label}${v.cliente ? ' — ' + v.cliente : ''}</div>
+                    <div class="venta-fecha">${fechaStr}</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+                <div class="venta-comision">+${cu % 1 === 0 ? cu : cu.toFixed(1)}€</div>
+                <button class="btn-del" onclick="borrarVenta(${v.id})">✕</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// CÁLCULO
+function calcFibra(n) {
+    if (!n || n <= 0) return 0;
+    if (n <= 10) return n * 6;
+    if (n <= 15) return n * 8;
+    if (n <= 21) return n * 10;
+    if (n <= 29) return n * 15;
+    if (n <= 40) return n * 17.5;
+    return n * 20;
+}
+
+function fmt(n) { return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €'; }
+
+function calcularNomina() {
+    const c = state.config;
+    const ventas = ventasMes();
+    const ct = { fibra:0, movil:0, fijo:0, fibraPro:0, tv:0 };
+    ventas.forEach(v => { ct[v.tipo] = (ct[v.tipo]||0) + 1; });
+
+    const comFibra    = calcFibra(ct.fibra);
+    const comMovil    = ct.movil    * 5;
+    const comFijo     = ct.fijo     * 2;
+    const comFibraPro = ct.fibraPro * 20;
+    const comTV       = ct.tv > 7 ? ct.tv * 7 : ct.tv * 3;
+    const comReales   = comFibra + comMovil + comFijo + comFibraPro + comTV;
+
+    let comFinales = comReales;
+    let textoMin = 'No aplica';
+    let minAplicado = false;
+    if (c.minimoActivo && comReales < c.minimoImporte) {
+        comFinales = c.minimoImporte; textoMin = 'Sí — ' + fmt(c.minimoImporte); minAplicado = true;
+    } else if (c.minimoActivo) { textoMin = 'No necesario'; }
+
+    const bruto  = c.fijo + comFinales;
+    const descSS = bruto * (c.ss   / 100);
+    const descIR = bruto * (c.irpf / 100);
+    const neto   = bruto - descSS - descIR;
+
+    // Tramos fibra: calcular uds y total en cada tramo alcanzado
+    const tramosRows = TRAMOS.map(t => {
+        if (ct.fibra < t.min) return { ...t, uds: 0, total: 0, estado: 'futuro' };
+        const uds = Math.min(ct.fibra, t.max) - t.min + 1;
+        const total = uds * t.rate;
+        const esActivo = ct.fibra >= t.min && ct.fibra <= t.max;
+        return { ...t, uds, total, estado: esActivo ? 'activo' : 'pasado' };
+    }).filter(t => t.uds > 0 || ct.fibra < t.min);
+
+    const area = document.getElementById('resultado-nomina');
+    area.style.display = 'block';
+    area.className = 'slide-up';
+
+    area.innerHTML = `
+        <!-- DESGLOSE PRODUCTO -->
+        <div class="res-section-title">📦 Desglose por producto</div>
+        <div class="card"><div>
+            ${ct.fibra    ? `<div class="res-row"><span>📶 Fibra <span class="tag">${ct.fibra} uds</span></span><span>${fmt(comFibra)}</span></div>` : ''}
+            ${ct.movil    ? `<div class="res-row"><span>📱 Móvil <span class="tag">${ct.movil} uds · 5€</span></span><span>${fmt(comMovil)}</span></div>` : ''}
+            ${ct.fijo     ? `<div class="res-row"><span>☎️ Fijo <span class="tag">${ct.fijo} uds · 2€</span></span><span>${fmt(comFijo)}</span></div>` : ''}
+            ${ct.fibraPro ? `<div class="res-row"><span>⚡ Fibra PRO <span class="tag">${ct.fibraPro} uds · 20€</span></span><span>${fmt(comFibraPro)}</span></div>` : ''}
+            ${ct.tv       ? `<div class="res-row"><span>📺 TV <span class="tag">${ct.tv} uds · ${ct.tv>7?'7':'3'}€${ct.tv>7?' 🔥':''}</span></span><span>${fmt(comTV)}</span></div>` : ''}
+            ${!ventas.length ? `<div class="res-row"><span style="color:#bbb">Sin contratos registrados</span><span>0,00 €</span></div>` : ''}
+            <div class="res-row bold"><span>💰 Total comisiones</span><span>${fmt(comReales)}</span></div>
+            ${c.minimoActivo ? `<div class="res-row" style="${minAplicado?'background:#E8FFF7':''}"><span>🛡️ Mínimo garantizado</span><span style="${minAplicado?'color:#00875A':''}">${textoMin}</span></div>` : ''}
+        </div></div>
+
+        <!-- TRAMOS FIBRA -->
+        ${ct.fibra > 0 ? `
+        <div class="res-section-title">📶 Tramos de comisión — Fibra</div>
+        <div class="card" style="overflow:hidden">
+            <table class="tramos-table">
+                <thead><tr><th>Tramo</th><th>€/ud</th><th>Uds</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                ${TRAMOS.map(t => {
+                    if (ct.fibra < t.min) {
+                        // tramo futuro: mostrar cuánto le falta
+                        const faltan = t.min - ct.fibra;
+                        return `<tr class="futuro"><td>${t.rango}</td><td>${t.rate}€</td><td colspan="2" style="color:#bbb;font-size:12px">Faltan ${faltan} ud${faltan>1?'s':''}</td></tr>`;
+                    }
+                    const uds   = Math.min(ct.fibra, t.max) - t.min + 1;
+                    const total = uds * t.rate;
+                    const esActivo = ct.fibra >= t.min && ct.fibra <= t.max;
+                    return `<tr class="${esActivo?'activo':''}"><td>${t.rango}</td><td>${t.rate}€</td><td>${uds}</td><td>${fmt(total)}</td></tr>`;
+                }).join('')}
+                </tbody>
+            </table>
+        </div>` : ''}
+
+        <!-- RESUMEN NÓMINA -->
+        <div class="res-section-title">💶 Resumen nómina</div>
+        <div class="card"><div>
+            <div class="res-row"><span>💼 Sueldo fijo bruto</span><span>${fmt(c.fijo)}</span></div>
+            <div class="res-row"><span>💰 Comisiones</span><span>${fmt(comFinales)}</span></div>
+            <div class="res-row bold"><span>📊 Total bruto</span><span>${fmt(bruto)}</span></div>
+            <div class="res-row" style="color:#c0392b"><span>➖ Seg. Social (${c.ss}%)</span><span>-${fmt(descSS)}</span></div>
+            <div class="res-row" style="color:#c0392b"><span>➖ IRPF (${c.irpf}%)</span><span>-${fmt(descIR)}</span></div>
+            <div class="neto-box">
+                <div class="neto-label">💵 Neto estimado</div>
+                <div class="neto-amount">${fmt(neto)}</div>
+                ${c.nota ? `<div class="neto-nota">*${c.nota}</div>` : ''}
+            </div>
+        </div></div>
+    `;
+}
+
+// INIT
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+cargar();
+cargarFormConfig();
+document.getElementById('v-fecha').value = new Date().toISOString().split('T')[0];
+renderBanner('n');
+if (state.config.nombre) {
+    document.getElementById('mes-n').textContent = mesLabel();
+}
+</script>
+</body>
+</html>
